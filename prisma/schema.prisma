@@ -9,3 +9,71 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id            Int           @id @default(autoincrement())
+  name          String
+  email         String
+  password      String
+  phone         String
+  zakats        Zakat[]
+  donations     Donation[]
+  mosques       Mosque[]
+  helpRequests  HelpRequest[]
+  updatedNisabs Nisab[]       @relation("updatedByUser")
+}
+
+model Zakat {
+  id             Int         @id @default(autoincrement())
+  value          Decimal?
+  collectionDate DateTime
+  location       String?
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
+  items          ZakatItem[]
+}
+
+model ZakatItem {
+  id       Int    @id @default(autoincrement())
+  itemName String
+  quantity Int
+  zakatId  Int
+  zakat    Zakat  @relation(fields: [zakatId], references: [id])
+}
+
+model Donation {
+  id           Int      @id @default(autoincrement())
+  amount       Decimal
+  donationDate DateTime
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Nisab {
+  id             Int      @id @default(autoincrement())
+  amount         Decimal
+  lastUpdateDate DateTime
+  updatedById    Int
+  updatedByUser  User     @relation("updatedByUser", fields: [updatedById], references: [id])
+}
+
+model HelpRequest {
+  id             Int      @id @default(autoincrement())
+  requestDetails String
+  reason         String?
+  approvalStatus Boolean
+  postingDate    DateTime
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+}
+
+model Mosque {
+  id            Int    @id @default(autoincrement())
+  createdBy     Int
+  name          String
+  location      String
+  contactNumber String
+  contactPerson String
+  imam          String
+  createdByUser User   @relation(fields: [createdBy], references: [id])
+}
