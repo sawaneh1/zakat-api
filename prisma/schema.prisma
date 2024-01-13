@@ -13,13 +13,16 @@ datasource db {
 model User {
   id            Int           @id @default(autoincrement())
   name          String
-  email         String
+  email         String        @unique
+  username      String        @unique
   password      String
-  phone         String
+  phone         String        @unique
   zakats        Zakat[]
   donations     Donation[]
   mosques       Mosque[]
   helpRequests  HelpRequest[]
+  role          Role          @relation(fields: [roleId], references: [id])
+  roleId        Int
   updatedNisabs Nisab[]       @relation("updatedByUser")
 }
 
@@ -35,7 +38,7 @@ model Zakat {
 
 model ZakatItem {
   id       Int    @id @default(autoincrement())
-  itemName String
+  itemName String @unique
   quantity Int
   zakatId  Int
   zakat    Zakat  @relation(fields: [zakatId], references: [id])
@@ -70,10 +73,23 @@ model HelpRequest {
 model Mosque {
   id            Int    @id @default(autoincrement())
   createdBy     Int
-  name          String
+  name          String @unique
   location      String
-  contactNumber String
+  contactNumber String @unique
   contactPerson String
   imam          String
   createdByUser User   @relation(fields: [createdBy], references: [id])
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  users       User[] // Add the missing opposite relation field
+  permissions Permission[]
+}
+
+model Permission {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  roles Role[] // Add the missing opposite relation field
 }
