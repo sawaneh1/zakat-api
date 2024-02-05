@@ -1,5 +1,4 @@
 import express from "express";
-import { addRole, getAllRoles } from "../Controller/RoleConntreoller";
 import { addPermission, getAllPermissions } from "../Controller/PermissionControler";
 
 const router = express.Router();
