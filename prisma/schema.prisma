@@ -11,45 +11,71 @@ datasource db {
 }
 
 model User {
-  id            Int           @id @default(autoincrement())
-  name          String
-  email         String        @unique
-  username      String        @unique
-  password      String
-  phone         String        @unique
-  zakats        Zakat[]
-  donations     Donation[]
-  mosques       Mosque[]
-  helpRequests  HelpRequest[]
-  role          Role          @relation(fields: [roleId], references: [id])
-  roleId        Int
-  updatedNisabs Nisab[]       @relation("updatedByUser")
+  id               Int              @id @default(autoincrement())
+  name             String
+  email            String           @unique
+  username         String           @unique
+  password         String
+  phone            String           @unique
+  zakats           Zakat[]
+  donations        Donation[]
+  mosques          Mosque[]
+  helpRequests     HelpRequest[]
+  role             Role             @relation(fields: [roleId], references: [id])
+  roleId           Int
+  updatedNisabs    Nisab[]          @relation("updatedByUser")
+  updatedByUser    Category[]       @relation("updatedByUser")
+  updatedZakatItem ZakatItem[]      @relation("updatedByUser")
+  Payment          Payment[]
+  fileAttachments  FileAttachment[]
+  revenues         Revenue[]
+  cashCollections  CashCollection[]
+  Activity         Activity[]
+  Blog             Blog[]
+  Transaction      Transaction[]
 }
 
 model Zakat {
-  id             Int         @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   value          Decimal?
   collectionDate DateTime
   location       String?
   userId         Int
-  user           User        @relation(fields: [userId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
   items          ZakatItem[]
+  Transaction    Transaction[]
 }
 
 model ZakatItem {
-  id       Int    @id @default(autoincrement())
-  itemName String @unique
-  quantity Int
-  zakatId  Int
-  zakat    Zakat  @relation(fields: [zakatId], references: [id])
+  id              Int      @id @default(autoincrement())
+  name            String   @unique
+  quantity        Int?
+  Zakat           Zakat[]
+  categoryId      Int
+  category        Category @relation(fields: [categoryId], references: [id])
+  nisab_threshold String?
+  rate            Decimal
+  updatedById     Int
+  updatedByUser   User     @relation("updatedByUser", fields: [updatedById], references: [id])
+}
+
+model Category {
+  id            Int         @id @default(autoincrement())
+  name          String
+  comment       String?
+  updatedById   Int
+  updatedByUser User        @relation("updatedByUser", fields: [updatedById], references: [id])
+  zakatItem     ZakatItem[]
 }
 
 model Donation {
-  id           Int      @id @default(autoincrement())
+  id           Int           @id @default(autoincrement())
   amount       Decimal
   donationDate DateTime
+  comment      String?
+  user         User          @relation(fields: [userId], references: [id])
   userId       Int
-  user         User     @relation(fields: [userId], references: [id])
+  Transaction  Transaction[]
 }
 
 model Nisab {
@@ -66,8 +92,8 @@ model HelpRequest {
   reason         String?
   approvalStatus Boolean
   postingDate    DateTime
-  userId         Int
   user           User     @relation(fields: [userId], references: [id])
+  userId         Int
 }
 
 model Mosque {
@@ -84,12 +110,171 @@ model Mosque {
 model Role {
   id          Int          @id @default(autoincrement())
   name        String       @unique
-  users       User[] // Add the missing opposite relation field
+  users       User[]
   permissions Permission[]
 }
 
 model Permission {
   id    Int    @id @default(autoincrement())
   name  String @unique
-  roles Role[] // Add the missing opposite relation field
+  roles Role[]
+}
+
+model CashCollection {
+  id                Int              @id @default(autoincrement())
+  amount            Decimal
+  collectionDate    DateTime
+  collectedByUserId Int
+  collectedByUser   User             @relation(fields: [collectedByUserId], references: [id])
+  reconciliations   Reconciliation[]
+}
+
+model Payment {
+  id            Int              @id @default(autoincrement())
+  amount        Decimal
+  paymentDate   DateTime
+  paidByUserId  Int
+  paidByUser    User             @relation(fields: [paidByUserId], references: [id])
+  uploadedFiles FileAttachment[]
+}
+
+// model EmployeeZakat {
+//   id            Int      @id @default(autoincrement())
+//   amount        Decimal
+//   paymentDate   DateTime
+//   userId        Int
+//   user          User          @relation(fields: [userId], references: [id])
+//   items         ZakatItem[]   @relation(fields: [itemsId], references: [id])
+//   itemsId       Int
+// }
+
+model FileAttachment {
+  id               Int       @id @default(autoincrement())
+  fileName         String
+  fileType         String
+  fileSize         Int
+  uploadedByUserId Int
+  uploadedByUser   User      @relation(fields: [uploadedByUserId], references: [id])
+  Payment          Payment[]
+}
+
+model Revenue {
+  id               Int      @id @default(autoincrement())
+  fromDateTime     DateTime
+  toDateTime       DateTime
+  amount           Decimal
+  approvedByUserId Int
+  approvedByUser   User     @relation(fields: [approvedByUserId], references: [id])
+}
+
+model Worksheet {
+  id              Int              @id @default(autoincrement())
+  timestamp       DateTime
+  userId          Int
+  cashInHand      Decimal
+  surplusOrDef    Decimal
+  comment         String
+  amount          Decimal
+  reconciliations Reconciliation[]
+}
+
+model Reconciliation {
+  id               Int            @id @default(autoincrement())
+  reconciliationId Int
+  fromDateTime     DateTime
+  toDateTime       DateTime
+  bankStatementUrl String
+  cashCollectionId Int
+  worksheetId      Int
+  cashCollection   CashCollection @relation(fields: [cashCollectionId], references: [id])
+  worksheet        Worksheet      @relation(fields: [worksheetId], references: [id])
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  timestamp   DateTime
+  userId      Int
+  description String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Blog {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  excerpt   String?
+  published Boolean  @default(false)
+  authorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Account {
+  id           Int           @id @default(autoincrement())
+  name         String
+  balance      Decimal       @default(0)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id         Int       @id @default(autoincrement())
+  amount     Decimal
+  type       String
+  date       DateTime  @default(now())
+  accountId  Int
+  account    Account   @relation(fields: [accountId], references: [id])
+  userId     Int?
+  user       User?     @relation(fields: [userId], references: [id])
+  zakatId    Int?
+  zakat      Zakat?    @relation(fields: [zakatId], references: [id])
+  donationId Int?
+  donation   Donation? @relation(fields: [donationId], references: [id])
+
+  goldInventoryId Int?
+  goldInventory   GoldInventory? @relation(fields: [goldInventoryId], references: [id])
+
+  silverInventoryId Int?
+  silverInventory   SilverInventory? @relation(fields: [silverInventoryId], references: [id])
+
+  animalInventoryId Int?
+  animalInventory   AnimalInventory? @relation(fields: [animalInventoryId], references: [id])
+
+  nonMonetaryAssetId Int?
+  nonMonetaryAsset   NonMonetaryAsset? @relation(fields: [nonMonetaryAssetId], references: [id])
+}
+
+model GoldInventory {
+  id             Int           @id @default(autoincrement())
+  weight         Decimal
+  description    String?
+  estimatedValue Decimal
+  Transaction    Transaction[]
+}
+
+model SilverInventory {
+  id             Int     @id @default(autoincrement())
+  weight         Decimal
+  estimatedValue Decimal
+  description    String?
+
+  Transaction Transaction[]
+}
+
+model AnimalInventory {
+  id             Int     @id @default(autoincrement())
+  quantity       Int
+  estimatedValue Decimal
+  description    String?
+
+  Transaction Transaction[]
+}
+
+model NonMonetaryAsset {
+  id             Int     @id @default(autoincrement())
+  name           String
+  quantity       Int
+  estimatedValue Decimal
+
+  Transaction Transaction[]
 }

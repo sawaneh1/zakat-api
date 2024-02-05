@@ -31,6 +31,8 @@ export const addRole = async(req:any, res:any) => {
   
   export const assignPermissionToRole = async(req:any, res:any) => {
     const {roleId,permissionIds} = req.body
+    console.log('permissionIds', permissionIds);
+    
     const updatedRole = await prisma.role.update({
         where: { id: roleId },
         data: {
