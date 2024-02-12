@@ -18,6 +18,7 @@ import nisabRoute from './Route/nisab';
 import mosqueRoute from './Route/masjids'
 import helpRequestRoute from './Route/request'; 
 import activityRoute from './Route/activties'; 
+import accountsRoute from './Route/accounts'; 
 
 dotenv.config();
 
@@ -59,6 +60,9 @@ app.use('/api/nisabs', nisabRoute);
 app.use('/api/masjids', mosqueRoute);
 app.use('/api/help-requests', helpRequestRoute);
 app.use('/api/activities', activityRoute);
+app.use('/api/accounts', accountsRoute);
+
+
 
 app.use(mainError);
 app.use(NotFoundError);

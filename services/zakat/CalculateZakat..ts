@@ -1,5 +1,5 @@
 
-export const calculateZakat = async (payload:any, nisab:any) =>{
+export const calculateZakat = async (payload:any,  nisab:any, userId:any) =>{
     if(!payload){
        return {sucesss:false , data: null, message: 'No payload passed'}
         
@@ -8,9 +8,19 @@ export const calculateZakat = async (payload:any, nisab:any) =>{
     let   zakat_value
     let money_owned
     let debt
+    let item
+    
     const {pay_in, saved_cash, money_owed_to_you, business_assests, shares, value_of_gold, value_of_silver, other_personal_assest , mortgage_payments,overdraft, load_payment,  business_liability, other_liabilities, } = payload 
 
     if(pay_in == 'cash'){
+           item = {  
+           "name": "Money",
+           "quantity": 1,
+           "categoryId": payload.categoryId,
+           "nisab_threshold": nisab.amount,
+           "rate": 0.25,
+           "updatedById": userId
+          }
             money_owned = saved_cash + money_owed_to_you + business_assests + shares + value_of_gold + value_of_gold + value_of_silver + other_personal_assest
             debt = mortgage_payments - overdraft + load_payment + business_liability + other_liabilities
         total_payable =  money_owned - debt
@@ -22,9 +32,8 @@ export const calculateZakat = async (payload:any, nisab:any) =>{
             console.log('in hereeeee',  total_payable >= nisab.amount ? total_payable - nisab.amount : 0);
             
              zakat_value =  total_payable >= nisab .amount? (total_payable - nisab.amount) * 0.25  : 0
-                
              console.log('nisab',  nisab);
-             return {sucesss:true , data: {zakat_value, money_owned, debt }, message: 'Calucalatiion was successful'}
+             return {sucesss:true , data: {zakat_value, item, money_owned, debt }, message: 'Calucalatiion was successful'}
           }else{
             return {sucesss:false , data: null, message: 'Somethinh went wrong!!!'}
           }

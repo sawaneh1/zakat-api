@@ -9,25 +9,17 @@ export const updateBalance = async (type:string, amount:number, accountId:number
   })
 
    if(!account){
-     throw new CustomError('Ops that resource was  not found...', 404, {reason:'Unable to locate the resouce'}) 
+     throw new CustomError('Ops that resource was not found...', 404, {reason:'Unable to locate the resouce'}) 
    } 
-   if(type == 'credit'){
-    await prisma.account.update({
-      where: {id:accountId},
-      data:{
-        balance:account.balance + amount
-      }
-    })
-        return {success: true}
-   }else {
-       await prisma.account.update({
-        where:{id: accountId},
-        data:{
-          balance:account.balance - amount
-        }
-       })
-       return {success: true}
-
-   }
+  
+   await prisma.account.update({
+    where: { id: accountId },
+    data: {
+      balance: {
+        [type === 'credit' ? 'increment' : 'decrement']: amount,
+      },
+    },
+  });
+  return {status:true,}
 
 }

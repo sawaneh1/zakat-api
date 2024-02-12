@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/db';
 import { CustomError } from '../Middleware/error';
 import { calculateZakat } from '../services/zakat/CalculateZakat.';
-import { customerResponse } from '../responses';
+import { customResponse } from '../responses';
 import { updateBalance } from '../services/acoount/UpdateBalance';
+import { createTransaction } from '../services/transaction/CreateTransaction';
+
 
 
 export const createZakat = async (req: Request, res: Response, next: NextFunction) => {
@@ -31,16 +33,22 @@ export const createZakat = async (req: Request, res: Response, next: NextFunctio
         },
       });
 
+       const data = await createTransaction(value)
 
-      await updateBalance('credit', value, 1);
+       if(data.status) {
 
-      transaction = zakat;
-    });
+         await updateBalance('credit', value, 1);
+         transaction = zakat;
+       } else{
+        throw new CustomError('Unable to create zakat', 400, {reason: 'Failed at creating transaction!!!'})
+       }
+
+      });
 
     res.json({ message: 'Zakat created successfully', zakat: transaction }).status(201);
 
   } catch (error) {
-    console.error('Error creating Zakat:', error);
+    console.error('Error creating Zakat:', error);                                                                                              
     next(new CustomError('Could not create Zakat', 500));
   }
 };
@@ -48,17 +56,17 @@ export const createZakat = async (req: Request, res: Response, next: NextFunctio
 
 
 export const ZakatPayable = async (req:Request , res: Response , next: NextFunction) =>{
-
+      const userId =  req.session.userId
   try {
     const nisab = await prisma.nisab.findFirst()
     console.log('nisab', nisab);
     
-    const  data =  await calculateZakat(req.body, nisab)
+    const  data =  await calculateZakat(req.body, nisab, userId)
     if( data?.sucesss == false) {
-     customerResponse(res, data.sucesss, data.message, data.data, 400 )
+     customResponse(res, data.sucesss, data.message, data.data, 400 )
 
     }
-     customerResponse(res, true, 'Zzakat Calucated Successfully', data?.data, 201)
+     customResponse(res, true, 'Zzakat Calucated Successfully', data?.data, 201)
 
   
 
